@@ -17,7 +17,8 @@ class Chat extends React.Component {
       username: '',
       message: '',
       messages: [],
-      users: []
+      users: [],
+      typingUser: '',
     }
 
     this.socket = io('localhost:8080')
@@ -31,10 +32,17 @@ class Chat extends React.Component {
     this.socket.on('NEW_USER', (data) => {
       this.setState({ users: [...this.state.users, data] })
     })
-    
+
     this.socket.on('WELCOME_USER', (data) => {
       updateColor(data.color)
       updateId(data.id)
+    })
+
+    this.socket.on('USER_IS_TYPING', (data) => {
+      this.setState({ typingUser: data.username })
+      setTimeout(() => {
+        this.setState({ typingUser: '' })
+      }, 1000);
     })
   }
 
@@ -46,15 +54,22 @@ class Chat extends React.Component {
 
     this.socket.emit('SEND_MESSAGE', {
       color,
-      userId: id,
-      message
+      message,
+      username,
+      userId: id
     })
 
     this.setState({ message: '' })
   }
 
+  messageTyping = (event) => {
+    this.setState({ message: event.target.value })
+    this.socket.emit('IS_TYPING')
+  }
+
   render() {
     const { username } = this.props.general
+    const { typingUser } = this.state
 
     return (
       <Layout>
@@ -70,7 +85,7 @@ class Chat extends React.Component {
         </Sider>
         <Layout>
           <Header style={{ color: 'white' }}>
-            Welcome! You are logged as 
+            Welcome! You are logged as
             {' '}
             <b>
               {username}
@@ -82,25 +97,21 @@ class Chat extends React.Component {
               dataSource={this.state.messages}
               renderItem={item => (
                 <List.Item>
-                  {console.log(item)}
                   <List.Item.Meta
-                    avatar={<div style={{ width: 20, height: 20, backgroundColor: item.color, marginTop: 5, borderRadius: 3 }} />}
-                    title={(
-                      <a href="https://ant.design">
-                        {item.title}
-                      </a>
-                    )}
+                    avatar={<div style={{ width: 25, height: 25, backgroundColor: item.color, marginTop: 3, borderRadius: 3 }} />}
+                    title={item.username}
                     description={item.message}
                   />
                 </List.Item>
               )}
             />
+          {typingUser && <p>{typingUser} is typing..</p>}
           </Content>
           <Footer>
             <div style={{ display: 'flex' }}>
-              <Input placeholder="Type your message.." value={this.state.message} onChange={ev => this.setState({ message: ev.target.value })} className="form-control" />
+              <Input placeholder="Type your message.." value={this.state.message} onChange={this.messageTyping} />
               <Button type="primary" onClick={this.sendMessage} style={{ marginLeft: 10 }}>
-Send
+                Send
               </Button>
             </div>
           </Footer>

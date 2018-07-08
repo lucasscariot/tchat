@@ -42,4 +42,8 @@ io.on('connection', (socket) => {
         messages.push(data)
         io.emit('RECEIVE_MESSAGE', data);
     })
+    
+    socket.on('IS_TYPING', () => {
+        socket.broadcast.emit('USER_IS_TYPING', users.find((user) => user.id === socket.id));
+    })
 });
