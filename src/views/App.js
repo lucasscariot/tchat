@@ -6,6 +6,7 @@ import ChooseUsername from './ChooseUsername'
 class App extends Component {
   render() {
     const { username } = this.props.general
+
     return (
       <Fragment>
         <Chat />

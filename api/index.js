@@ -3,15 +3,6 @@ const socket = require('socket.io');
 
 const app = express();
 
-const colors = [
-    '#cd13a0',
-    '#891a45',
-    '#638dd5',
-    '#fcc424',
-    '#c1c848',
-    '#f73768',
-    '#2275d1',
-]
 let users = []
 const messages = []
 
@@ -22,7 +13,6 @@ server = app.listen(8080, function () {
 io = socket(server);
 
 io.on('connection', (socket) => {
-
     users.forEach(user => {
         socket.emit('NEW_USER', user)
     })
@@ -36,13 +26,22 @@ io.on('connection', (socket) => {
             color: '#' + (Math.random() * 0xFFFFFF << 0).toString(16)
         }
 
+        messages.forEach(message => {
+            socket.emit('RECEIVE_MESSAGE', message)
+        })
+
         users.push(newUser)
         io.emit('NEW_USER', newUser);
         socket.emit('WELCOME_USER', newUser);
     })
 
     socket.on('SEND_MESSAGE', function (data) {
+        if (messages.length >= 10) {
+            messages.splice(0, 1)
+        }
+
         messages.push(data)
+        
         io.emit('RECEIVE_MESSAGE', data);
     })
 

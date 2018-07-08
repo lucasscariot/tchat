@@ -42,6 +42,8 @@ class Chat extends React.Component {
     const { username } = this.props.general
     const { updateColor, updateId } = this.props
 
+    this.setState({ isInitialized: true })
+
     this.socket.emit('ADD_USER', { username })
 
     this.socket.on('RECEIVE_MESSAGE', (data) => {
@@ -89,6 +91,8 @@ class Chat extends React.Component {
 
     event.preventDefault()
 
+    if (message === '') return
+
     this.socket.emit('SEND_MESSAGE', {
       color,
       message,
@@ -115,7 +119,6 @@ class Chat extends React.Component {
     const { isInitialized } = this.state
 
     if (username && !isInitialized) {
-      this.setState({ isInitialized: true })
       this.initialize()
     }
 
@@ -140,7 +143,7 @@ class Chat extends React.Component {
               renderItem={item => (
                 <List.Item>
                   <List.Item.Meta
-                    avatar={<div style={{ width: 25, height: 25, backgroundColor: item.color, marginTop: 3, borderRadius: 3 }} />}
+                    avatar={<div style={{ width: 25, height: 25, backgroundColor: item.color, marginTop: 5, borderRadius: 3 }} />}
                     title={item.username}
                     description={item.message}
                   />

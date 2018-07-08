@@ -20,6 +20,7 @@ class ChooseUsername extends React.Component {
       <Modal
         visible={true}
         title="Choose username"
+        closable={false}
         footer={[
           <Button key="Submit" onClick={this.submitUsername}>Submit</Button>
         ]}
