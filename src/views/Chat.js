@@ -19,7 +19,7 @@ class Chat extends React.Component {
       users: [],
     }
 
-    this.socket = io('localhost:8080')
+    this.socket = io(process.env.REACT_APP_SERVER_URL)
 
     this.socket.on('NEW_USER', (data) => {
       this.setState({ users: [...this.state.users, data] })
