@@ -1,13 +1,15 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import io from 'socket.io-client'
 import { Layout, Input, Button, Badge, List } from 'antd'
 
 import { updateColor, updateId } from '../store/general'
+import { init, initAll } from '../store/websocket'
+import { sendMessage } from '../store/messages'
+import socket from '../config/socket'
 
 const { Header, Footer, Sider, Content } = Layout
 
-class Chat extends React.Component {
+class Chat extends Component {
   constructor(props) {
     super(props)
 
@@ -15,92 +17,24 @@ class Chat extends React.Component {
       isInitialized: false,
       username: '',
       message: '',
-      messages: [],
-      users: [],
     }
 
-    this.socket = io(process.env.REACT_APP_SERVER_URL)
-
-    this.socket.on('NEW_USER', (data) => {
-      this.setState({ users: [...this.state.users, data] })
-    })
-
-    this.socket.on('DISCONNECT_USER', (data) => {
-      const { users } = this.state
-
-      const userIndex = users.findIndex(user => user.id === data)
-
-      if (userIndex === -1) return
-
-      users[userIndex].isConnected = false
-
-      this.setState({ users })
-    })
+    this.props.init()
   }
 
   initialize = () => {
-    const { username } = this.props.general
-    const { updateColor, updateId } = this.props
-
     this.setState({ isInitialized: true })
-
-    this.socket.emit('ADD_USER', { username })
-
-    this.socket.on('RECEIVE_MESSAGE', (data) => {
-      this.setState({ messages: [...this.state.messages, data] })
-    })
-
-    this.socket.on('WELCOME_USER', (data) => {
-      updateColor(data.color)
-      updateId(data.id)
-    })
-
-    this.socket.on('USER_IS_TYPING', (data) => {
-      const { users } = this.state
-
-      const userIndex = users.findIndex(user => user.id === data)
-
-      if (userIndex === -1) return
-
-      users[userIndex].isTyping = true
-
-      this.setState({ users })
-
-      setTimeout(() => {
-        users[userIndex].isTyping = false
-        this.setState({ users })
-      }, 5000);
-    })
-
-    this.socket.on('USER_STOPPED_TYPING', (data) => {
-      const { users } = this.state
-
-      const userIndex = users.findIndex(user => user.id === data)
-
-      if (userIndex === -1) return
-
-      users[userIndex].isTyping = false
-
-      this.setState({ users })
-    })
+    this.props.initAll()
   }
 
   sendMessage = event => {
-    const { username, id, color } = this.props.general
     const { message } = this.state
 
     event.preventDefault()
 
     if (message === '') return
 
-    this.socket.emit('SEND_MESSAGE', {
-      color,
-      message,
-      username,
-      userId: id
-    })
-
-    this.socket.emit('STOPPED_TYPING')
+    this.props.sendMessage(message)
 
     this.setState({ message: '' })
   }
@@ -108,14 +42,15 @@ class Chat extends React.Component {
   messageTyping = (event) => {
     this.setState({ message: event.target.value })
     if (event.target.value === '') {
-      this.socket.emit('STOPPED_TYPING')
+      socket.emit('STOPPED_TYPING')
     } else {
-      this.socket.emit('IS_TYPING')
+      socket.emit('STARTED_TYPING')
     }
   }
 
   render() {
-    const { username } = this.props.general
+    const { users, general, messages } = this.props
+    const { username } = general
     const { isInitialized } = this.state
 
     if (username && !isInitialized) {
@@ -125,7 +60,7 @@ class Chat extends React.Component {
     return (
       <Layout>
         <Sider style={{ padding: 10, backgroundColor: '#f0f2f5' }}>
-          {this.state.users.map((user, index) => (
+          {users.map((user, index) => (
             <div key={index} style={{ display: 'flex' }}>
               <Badge style={{ marginLeft: 10 }} status={user.isConnected ? 'success' : 'error'} />
               <p>{user.username}</p>
@@ -139,7 +74,7 @@ class Chat extends React.Component {
           <Content style={{ padding: '0 50px' }}>
             <List
               itemLayout="horizontal"
-              dataSource={this.state.messages}
+              dataSource={messages}
               renderItem={item => (
                 <List.Item>
                   <List.Item.Meta
@@ -150,7 +85,7 @@ class Chat extends React.Component {
                 </List.Item>
               )}
             />
-            {this.state.users.filter(user => user.isTyping).map(user => <p key={user.id}>{user.username} is typing..</p>)}
+            {users.filter(user => user.isTyping).map(user => <p key={user.id}>{user.username} is typing..</p>)}
           </Content>
           <Footer>
             <div style={{ display: 'flex' }}>
@@ -168,12 +103,17 @@ class Chat extends React.Component {
 
 
 const mapStateToProps = state => ({
-  general: state.general
+  messages: state.messages,
+  general: state.general,
+  users: state.users
 })
 
 const mapDispatchToProps = {
   updateColor,
-  updateId
+  sendMessage,
+  updateId,
+  initAll,
+  init
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Chat)

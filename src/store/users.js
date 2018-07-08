@@ -1,25 +1,34 @@
 import { createAction, handleActions } from 'redux-actions'
 
-const defaultState = {
-  username: '',
-  id: '',
-  color: '',
-}
+const defaultState = [];
 
-export const submitUsername = createAction('SUBMIT_USERNAME')
-export const updateColor = createAction('UPDATE_COLOR')
-export const updateId = createAction('UPDATE_ID')
+export const userJoined = createAction('USER_JOINED')
+export const userLeft = createAction('USER_LEFT')
+export const userStartedTyping = createAction('USER_STARTED_TYPING')
+export const userStoppedTyping = createAction('USER_STOPPED_TYPING')
 
 const reducer = handleActions(
   {
-    [submitUsername](state, { payload }) {
-      return { ...state, username: payload }
+    [userJoined](state, { payload }) {
+      return [...state, payload]
     },
-    [updateColor](state, { payload }) {
-      return { ...state, color: payload }
+    [userLeft](state, { payload }) {
+      return [...state.map(user => ({
+        ...user,
+        ...(user.id === payload ? { isConnected: false } : {})
+      }))]
     },
-    [updateId](state, { payload }) {
-      return { ...state, id: payload }
+    [userStartedTyping](state, { payload }) {
+      return [...state.map(user => ({
+        ...user,
+        ...(user.id === payload ? { isTyping: true } : {})
+      }))]
+    },
+    [userStoppedTyping](state, { payload }) {
+      return [...state.map(user => ({
+        ...user,
+        ...(user.id === payload ? { isTyping: false } : {})
+      }))]
     },
   },
   defaultState,

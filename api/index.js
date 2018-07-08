@@ -14,13 +14,14 @@ io = socket(server);
 
 io.on('connection', (socket) => {
     users.forEach(user => {
-        socket.emit('NEW_USER', user)
+        socket.emit('USER_JOINED', user)
     })
 
     socket.on('ADD_USER', function (data) {
+        console.log(data)
         const newUser = {
-            ...data,
             id: socket.id,
+            username: data,
             isTyping: false,
             isConnected: true,
             color: '#' + (Math.random() * 0xFFFFFF << 0).toString(16)
@@ -31,7 +32,7 @@ io.on('connection', (socket) => {
         })
 
         users.push(newUser)
-        io.emit('NEW_USER', newUser);
+        io.emit('USER_JOINED', newUser);
         socket.emit('WELCOME_USER', newUser);
     })
 
@@ -41,12 +42,16 @@ io.on('connection', (socket) => {
         }
 
         messages.push(data)
-        
+
         io.emit('RECEIVE_MESSAGE', data);
     })
 
-    socket.on('IS_TYPING', () => {
-        socket.broadcast.emit('USER_IS_TYPING', socket.id);
+    socket.on('STARTED_TYPING', () => {
+        socket.broadcast.emit('USER_STARTED_TYPING', socket.id);
+
+        setTimeout(() => {
+            socket.broadcast.emit('USER_STOPPED_TYPING', socket.id);
+        }, 3000)
     })
 
     socket.on('STOPPED_TYPING', () => {
@@ -54,7 +59,7 @@ io.on('connection', (socket) => {
     })
 
     socket.on('disconnect', () => {
-        socket.broadcast.emit('DISCONNECT_USER', socket.id);
+        socket.broadcast.emit('USER_LEFT', socket.id);
         users = users.filter(user => user.id !== socket.id)
     })
 });
