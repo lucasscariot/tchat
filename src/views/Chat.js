@@ -10,27 +10,42 @@ const { Header, Footer, Sider, Content } = Layout
 class Chat extends React.Component {
   constructor(props) {
     super(props)
-    const { username } = this.props.general
-    const { updateColor, updateId } = this.props
 
     this.state = {
+      isInitialized: false,
       username: '',
       message: '',
       messages: [],
       users: [],
-      typingUser: '',
     }
 
     this.socket = io('localhost:8080')
+
+    this.socket.on('NEW_USER', (data) => {
+      this.setState({ users: [...this.state.users, data] })
+    })
+
+    this.socket.on('DISCONNECT_USER', (data) => {
+      const { users } = this.state
+
+      const userIndex = users.findIndex(user => user.id === data)
+
+      if (userIndex === -1) return
+
+      users[userIndex].isConnected = false
+
+      this.setState({ users })
+    })
+  }
+
+  initialize = () => {
+    const { username } = this.props.general
+    const { updateColor, updateId } = this.props
 
     this.socket.emit('ADD_USER', { username })
 
     this.socket.on('RECEIVE_MESSAGE', (data) => {
       this.setState({ messages: [...this.state.messages, data] })
-    })
-
-    this.socket.on('NEW_USER', (data) => {
-      this.setState({ users: [...this.state.users, data] })
     })
 
     this.socket.on('WELCOME_USER', (data) => {
@@ -39,10 +54,32 @@ class Chat extends React.Component {
     })
 
     this.socket.on('USER_IS_TYPING', (data) => {
-      this.setState({ typingUser: data.username })
+      const { users } = this.state
+
+      const userIndex = users.findIndex(user => user.id === data)
+
+      if (userIndex === -1) return
+
+      users[userIndex].isTyping = true
+
+      this.setState({ users })
+
       setTimeout(() => {
-        this.setState({ typingUser: '' })
-      }, 1000);
+        users[userIndex].isTyping = false
+        this.setState({ users })
+      }, 5000);
+    })
+
+    this.socket.on('USER_STOPPED_TYPING', (data) => {
+      const { users } = this.state
+
+      const userIndex = users.findIndex(user => user.id === data)
+
+      if (userIndex === -1) return
+
+      users[userIndex].isTyping = false
+
+      this.setState({ users })
     })
   }
 
@@ -59,37 +96,42 @@ class Chat extends React.Component {
       userId: id
     })
 
+    this.socket.emit('STOPPED_TYPING')
+
     this.setState({ message: '' })
   }
 
   messageTyping = (event) => {
     this.setState({ message: event.target.value })
-    this.socket.emit('IS_TYPING')
+    if (event.target.value === '') {
+      this.socket.emit('STOPPED_TYPING')
+    } else {
+      this.socket.emit('IS_TYPING')
+    }
   }
 
   render() {
     const { username } = this.props.general
-    const { typingUser } = this.state
+    const { isInitialized } = this.state
+
+    if (username && !isInitialized) {
+      this.setState({ isInitialized: true })
+      this.initialize()
+    }
 
     return (
       <Layout>
         <Sider style={{ padding: 10, backgroundColor: '#f0f2f5' }}>
           {this.state.users.map((user, index) => (
             <div key={index} style={{ display: 'flex' }}>
-              <Badge style={{ marginLeft: 10 }} status='success' />
-              <p>
-                {user.username}
-              </p>
+              <Badge style={{ marginLeft: 10 }} status={user.isConnected ? 'success' : 'error'} />
+              <p>{user.username}</p>
             </div>
           ))}
         </Sider>
         <Layout>
           <Header style={{ color: 'white' }}>
-            Welcome! You are logged as
-            {' '}
-            <b>
-              {username}
-            </b>
+            <p>Welcome! You are logged as <b>{username}</b></p>
           </Header>
           <Content style={{ padding: '0 50px' }}>
             <List
@@ -105,7 +147,7 @@ class Chat extends React.Component {
                 </List.Item>
               )}
             />
-          {typingUser && <p>{typingUser} is typing..</p>}
+            {this.state.users.filter(user => user.isTyping).map(user => <p key={user.id}>{user.username} is typing..</p>)}
           </Content>
           <Footer>
             <div style={{ display: 'flex' }}>

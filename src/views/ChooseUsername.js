@@ -1,6 +1,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { submitUsername } from '../store/general'
+import { Modal, Input, Button } from 'antd'
 
 class ChooseUsername extends React.Component {
   constructor(props) {
@@ -16,22 +17,15 @@ class ChooseUsername extends React.Component {
 
   render() {
     return (
-      <div className="container">
-        <div className="card">
-          <div className="card-body">
-            <div className="card-title">
-Choose username
-            </div>
-          </div>
-          <div className="card-footer">
-            <input type="text" placeholder="Username" value={this.state.username} onChange={ev => this.setState({ username: ev.target.value })} className="form-control" />
-            <br />
-            <button onClick={this.submitUsername} className="btn btn-primary form-control">
-Send
-            </button>
-          </div>
-        </div>
-      </div>
+      <Modal
+        visible={true}
+        title="Choose username"
+        footer={[
+          <Button key="Submit" onClick={this.submitUsername}>Submit</Button>
+        ]}
+      >
+        <Input type="text" placeholder="Username" value={this.state.username} onChange={ev => this.setState({ username: ev.target.value })} />
+      </Modal>
     )
   }
 }

@@ -12,7 +12,7 @@ const colors = [
     '#f73768',
     '#2275d1',
 ]
-const users = []
+let users = []
 const messages = []
 
 server = app.listen(8080, function () {
@@ -22,28 +22,40 @@ server = app.listen(8080, function () {
 io = socket(server);
 
 io.on('connection', (socket) => {
-    
+
+    users.forEach(user => {
+        socket.emit('NEW_USER', user)
+    })
+
     socket.on('ADD_USER', function (data) {
         const newUser = {
             ...data,
             id: socket.id,
-            color: '#'+(Math.random()*0xFFFFFF<<0).toString(16)
+            isTyping: false,
+            isConnected: true,
+            color: '#' + (Math.random() * 0xFFFFFF << 0).toString(16)
         }
 
         users.push(newUser)
-        socket.broadcast.emit('NEW_USER', newUser);
+        io.emit('NEW_USER', newUser);
         socket.emit('WELCOME_USER', newUser);
-        users.forEach(user => {
-            socket.emit('NEW_USER', user)
-        })
     })
-    
+
     socket.on('SEND_MESSAGE', function (data) {
         messages.push(data)
         io.emit('RECEIVE_MESSAGE', data);
     })
-    
+
     socket.on('IS_TYPING', () => {
-        socket.broadcast.emit('USER_IS_TYPING', users.find((user) => user.id === socket.id));
+        socket.broadcast.emit('USER_IS_TYPING', socket.id);
+    })
+
+    socket.on('STOPPED_TYPING', () => {
+        socket.broadcast.emit('USER_STOPPED_TYPING', socket.id);
+    })
+
+    socket.on('disconnect', () => {
+        socket.broadcast.emit('DISCONNECT_USER', socket.id);
+        users = users.filter(user => user.id !== socket.id)
     })
 });
