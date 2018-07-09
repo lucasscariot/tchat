@@ -3,7 +3,7 @@ const socket = require('socket.io');
 
 const app = express();
 
-let timeOutTyping;
+const timeOutTyping = {}
 let users = []
 const messages = []
 
@@ -52,11 +52,11 @@ io.on('connection', (socket) => {
   })
 
   socket.on('STARTED_TYPING', () => {
-    clearTimeout(timeOutTyping)
+    clearTimeout(timeOutTyping[socket.id])
 
     socket.broadcast.emit('USER_STARTED_TYPING', socket.id);
 
-    timeOutTyping = setTimeout(() => {
+    timeOutTyping[socket.id] = setTimeout(() => {
       socket.broadcast.emit('USER_STOPPED_TYPING', socket.id);
     }, 2000)
   })
