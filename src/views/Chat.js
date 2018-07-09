@@ -30,8 +30,6 @@ class Chat extends Component {
   sendMessage = event => {
     const { message } = this.state
 
-    event.preventDefault()
-
     if (message === '') return
 
     this.props.sendMessage(message)
