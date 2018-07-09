@@ -4,6 +4,9 @@ import { updateColor, updateId } from './general'
 import { receiveMessage } from './messages';
 
 export const init = () => (dispatch, getState) => {
+
+  Notification.requestPermission()
+
   socket.on('USER_JOINED', (data) => {
     dispatch(userJoined(data))
   })
@@ -30,6 +33,13 @@ export const initAll = () => (dispatch, getState) => {
   })
 
   socket.on('RECEIVE_MESSAGE', (data) => {
+    if (document.hidden) {
+      new Notification(data.username, {
+        body: data.message,
+        vibrate: true,
+        icon: 'http://cdn.sstatic.net/stackexchange/img/logos/so/so-icon.png'
+      })
+    }
     dispatch(receiveMessage(data))
   })
 }

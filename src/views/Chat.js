@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { Layout, Input, Button, Badge, List } from 'antd'
+import { Layout, Input, Button, Badge, List, Tooltip } from 'antd'
 
 import { updateColor, updateId } from '../store/general'
 import { init, initAll } from '../store/websocket'
@@ -65,7 +65,9 @@ class Chat extends Component {
             {users.map((user, index) => (
               <div key={index} style={{ display: 'flex' }}>
                 <Badge style={{ marginLeft: 10 }} status={user.isConnected ? 'success' : 'error'} />
-                <p>{user.username}</p>
+                <Tooltip title={user.address} placement="right">
+                  <p>{user.username}</p>
+                </Tooltip>
               </div>
             ))}
           </Sider>

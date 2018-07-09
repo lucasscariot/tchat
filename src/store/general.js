@@ -1,7 +1,7 @@
 import { createAction, handleActions } from 'redux-actions'
 
 const defaultState = {
-  username: '',
+  username: 'Lucas',
   id: '',
   color: '',
 }

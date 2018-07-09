@@ -29,6 +29,7 @@ io.on('connection', (socket) => {
       username: data,
       isTyping: false,
       isConnected: true,
+      address: socket.request.connection.remoteAddress,
       color: '#' + (Math.random() * 0xFFFFFF << 0).toString(16)
     }
 
