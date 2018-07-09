@@ -57,42 +57,64 @@ class Chat extends Component {
 
     return (
       <Layout>
-        <Sider style={{ padding: 10, backgroundColor: '#f0f2f5' }}>
-          {users.map((user, index) => (
-            <div key={index} style={{ display: 'flex' }}>
-              <Badge style={{ marginLeft: 10 }} status={user.isConnected ? 'success' : 'error'} />
-              <p>{user.username}</p>
-            </div>
-          ))}
-        </Sider>
+        <Header style={{ color: 'white' }}>
+          <p>Welcome! You are logged as <b>{username}</b></p>
+        </Header>
         <Layout>
-          <Header style={{ color: 'white' }}>
-            <p>Welcome! You are logged as <b>{username}</b></p>
-          </Header>
-          <Content style={{ padding: '0 50px' }}>
-            <List
-              itemLayout="horizontal"
-              dataSource={messages}
-              renderItem={item => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={<div style={{ width: 25, height: 25, backgroundColor: item.color, marginTop: 5, borderRadius: 3 }} />}
-                    title={item.username}
-                    description={item.message}
-                  />
-                </List.Item>
-              )}
-            />
-            {users.filter(user => user.isTyping).map(user => <p key={user.id}>{user.username} is typing..</p>)}
-          </Content>
-          <Footer>
-            <div style={{ display: 'flex' }}>
-              <Input placeholder="Type your message.." value={this.state.message} onChange={this.messageTyping} />
-              <Button type="primary" onClick={this.sendMessage} style={{ marginLeft: 10 }}>
-                Send
-              </Button>
-            </div>
-          </Footer>
+          <Sider style={{ padding: 10, backgroundColor: '#f0f2f5' }}>
+            {users.map((user, index) => (
+              <div key={index} style={{ display: 'flex' }}>
+                <Badge style={{ marginLeft: 10 }} status={user.isConnected ? 'success' : 'error'} />
+                <p>{user.username}</p>
+              </div>
+            ))}
+          </Sider>
+
+          <Layout>
+            <Content style={{ padding: '0 50px' }}>
+              <List
+                itemLayout="horizontal"
+                dataSource={messages}
+                renderItem={item => (
+                  <List.Item>
+                    <List.Item.Meta
+                      avatar={<div style={{ width: 25, height: 25, backgroundColor: item.color, marginTop: 5, borderRadius: 3 }} />}
+                      title={item.username}
+                      description={item.message}
+                    />
+                  </List.Item>
+                )}
+              />
+            </Content>
+            <Footer>
+              <div style={{ display: 'flex' }}>
+                <Input placeholder="Type your message.." value={this.state.message} onChange={this.messageTyping} />
+                <Button type="primary" onClick={this.sendMessage} style={{ marginLeft: 10 }}>
+                  Send
+                </Button>
+              </div>
+              {users.filter(user => user.isTyping).length > 0 &&
+                <p
+                  style={{
+                    margin: 0,
+                    marginTop: 4,
+                    fontSize: 10,
+                    position: 'absolute'
+                  }}
+                >
+                  {users
+                    .filter(user => user.isTyping)
+                    .map(user => user.username)
+                    .join(', ')
+                  }&nbsp;
+                  {users
+                    .filter(user => user.isTyping)
+                    .length > 1 ? 'are' : 'is'
+                  } typing..
+                </p>
+              }
+            </Footer>
+          </Layout>
         </Layout>
       </Layout>
     )

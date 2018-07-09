@@ -18,7 +18,6 @@ io = socket(server, {
   cookie: false
 });
 
-
 io.on('connection', (socket) => {
   users.forEach(user => {
     socket.emit('USER_JOINED', user)
