@@ -18,7 +18,6 @@ io.on('connection', (socket) => {
     })
 
     socket.on('ADD_USER', function (data) {
-        console.log(data)
         const newUser = {
             id: socket.id,
             username: data,

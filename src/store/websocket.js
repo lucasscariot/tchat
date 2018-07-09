@@ -14,9 +14,6 @@ export const init = () => (dispatch, getState) => {
 }
 
 export const initAll = () => (dispatch, getState) => {
-
-  console.log(getState().general.username)
-
   socket.emit('ADD_USER', getState().general.username)
 
   socket.on('WELCOME_USER', (data) => {
