@@ -3,6 +3,7 @@ const socket = require('socket.io');
 
 const app = express();
 
+let timeOutTyping;
 let users = []
 const messages = []
 
@@ -11,6 +12,7 @@ server = app.listen(8080, function () {
 });
 
 io = socket(server);
+
 
 io.on('connection', (socket) => {
     users.forEach(user => {
@@ -46,11 +48,13 @@ io.on('connection', (socket) => {
     })
 
     socket.on('STARTED_TYPING', () => {
+        clearTimeout(timeOutTyping)
+
         socket.broadcast.emit('USER_STARTED_TYPING', socket.id);
 
-        setTimeout(() => {
+        timeOutTyping = setTimeout(() => {
             socket.broadcast.emit('USER_STOPPED_TYPING', socket.id);
-        }, 3000)
+        }, 2000)
     })
 
     socket.on('STOPPED_TYPING', () => {
